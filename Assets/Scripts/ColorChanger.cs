@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ColorChanger : MonoBehaviour
 {
-    public Color SetRandomColor()
+    public Color DoRandomColor()
     {
         float red = Random.value;
         float green = Random.value;

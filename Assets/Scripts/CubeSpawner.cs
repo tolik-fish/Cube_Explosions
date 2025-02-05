@@ -3,52 +3,45 @@ using UnityEngine;
 
 public class CubeSpawner : MonoBehaviour
 {
-    private float _chanceSpawn = 1f;
-    private float _chanceMultiplier = 0.5f;
     private float _scaleMultiplier = 0.5f;
     private int _minNumberCubeSpawn = 2;
     private int _maxNumberCubeSpawn = 6;
 
-    public bool ShouldSpawn { get; private set; }
+    [SerializeField] private GameObject _prefab;
+    [SerializeField] private ColorChanger _colorChanger;
+
+    private List<Cube> _cubes;
 
     private void Start()
     {
-        ShouldSpawn = Random.value <= _chanceSpawn;
+        _cubes = new List<Cube>(FindObjectsOfType<Cube>());
     }
 
-    public void Spawn()
+    public void Spawn(Transform transform, float currentCount)
     {
         int randomNumber = Random.Range(_minNumberCubeSpawn, _maxNumberCubeSpawn + 1);
 
-        List<Rigidbody> newCubes = new List<Rigidbody>();
-
-        _chanceSpawn *= _chanceMultiplier;
-
         for (int i = 0; i < randomNumber; i++)
         {
-            GameObject newCube = CreateCube();
-
-            newCubes.Add(newCube.GetComponent<Rigidbody>());
+            GameObject newCube = CreateCube(transform, currentCount);
 
             newCube.GetComponent<ExplodeCreator>().Explode();
         }
     }
 
-    private GameObject CreateCube()
+    private GameObject CreateCube(Transform transform, float currentCount)
     {
-        GameObject newCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        GameObject newCube = GameObject.Instantiate(_prefab, transform.position, Quaternion.identity);
 
-        newCube.transform.position = transform.position;
-        newCube.transform.localScale = gameObject.transform.localScale * _scaleMultiplier;
+        newCube.transform.localScale = transform.localScale * _scaleMultiplier;
 
-        newCube.AddComponent<Rigidbody>();
-        newCube.AddComponent<CubeSpawner>();
-        newCube.AddComponent<CubeBehaviour>();
-        newCube.AddComponent<ColorChanger>();
-        newCube.AddComponent<ExplodeCreator>();
+        newCube.GetComponent<Renderer>().material.color = _colorChanger.DoRandomColor();
 
-        newCube.GetComponent<Renderer>().material.color = GetComponent<ColorChanger>().SetRandomColor();
-        newCube.GetComponent<CubeSpawner>()._chanceSpawn = _chanceSpawn;
+        Cube newCubeComponent = newCube.GetComponent<Cube>();
+
+        _cubes.Add(newCubeComponent);
+
+        newCubeComponent.IncreaseCount(currentCount);
 
         return newCube;
     }
