@@ -6,40 +6,36 @@ public class Cube : MonoBehaviour
     private Rigidbody _rigidbody;
     private Renderer _renderer;
     private float _chanceMultiplier = 0.5f;
-    private float _initialChanceSpawn = 1f;
+    private float _chanceSpawn = 1f;
 
     public event Action<Cube> Clicked;
-
-    private float _currentChanceSpawn => _initialChanceSpawn * Mathf.Pow(_chanceMultiplier, CurrentDivisionCount);
-
-    public float CurrentDivisionCount { get; private set; }
 
     public Renderer Renderer { get; private set; }
 
     public Rigidbody Rigidbody { get; private set; }
 
+    public float ChanceSpawn { get; private set; }
+
     private void Awake()
     {
-        CurrentDivisionCount = 0;
         _renderer = GetComponent<Renderer>();
         _rigidbody = GetComponent<Rigidbody>();
         Renderer = _renderer;
         Rigidbody = _rigidbody;
+        ChanceSpawn = _chanceSpawn;
     }
 
     private void OnMouseDown()
     {
-        if (UnityEngine.Random.value <= _currentChanceSpawn)
-        {
-            Clicked.Invoke(this);
-        }
+        Clicked.Invoke(this);
 
         Destroy(gameObject);
     }
 
-    public void IncreaseCount(float count)
+    public void DecreaseChance(float chance)
     {
-        CurrentDivisionCount = count;
-        CurrentDivisionCount++;
+        _chanceSpawn = chance;
+        _chanceSpawn *= _chanceMultiplier;
+        ChanceSpawn = _chanceSpawn;
     }
 }

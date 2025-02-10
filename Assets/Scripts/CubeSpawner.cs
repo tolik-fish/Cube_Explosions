@@ -7,17 +7,11 @@ public class CubeSpawner : MonoBehaviour
     [SerializeField] private Cube _cubePrefab;
     [SerializeField] private ColorChanger _colorChanger;
     [SerializeField] private ExplodeCreator _explodeCreator;
+    [SerializeField] private List<Cube> _cubes;
 
     private float _scaleMultiplier = 0.5f;
     private int _minNumberCubeSpawn = 2;
     private int _maxNumberCubeSpawn = 6;
-
-    private List<Cube> _cubes;
-
-    private void Awake()
-    {
-        _cubes = FindObjectsOfType<Cube>().ToList();
-    }
 
     private void OnEnable()
     {
@@ -31,36 +25,36 @@ public class CubeSpawner : MonoBehaviour
             cube.Clicked -= Spawn;
     }
 
-
     public void Spawn(Cube cube)
     {
-        int randomNumber = Random.Range(_minNumberCubeSpawn, _maxNumberCubeSpawn + 1);
-
-        List<Rigidbody> newCubesRigidbody = new List<Rigidbody>();
-
-        for (int i = 0; i < randomNumber; i++)
+        if (Random.value <= cube.ChanceSpawn)
         {
-            Cube newCube = CreateCube(cube.transform.position, cube.CurrentDivisionCount);
+            int randomNumber = Random.Range(_minNumberCubeSpawn, _maxNumberCubeSpawn + 1);
 
-            newCubesRigidbody.Add(newCube.Rigidbody);
+            List<Rigidbody> newCubesRigidbody = new List<Rigidbody>();
 
-            newCube.Clicked += Spawn;
+            for (int i = 0; i < randomNumber; i++)
+            {
+                Cube newCube = CreateCube(cube.transform, cube.ChanceSpawn);
+
+                newCubesRigidbody.Add(newCube.Rigidbody);
+
+                newCube.Clicked += Spawn;
+            }
+
+            _explodeCreator.Explode(newCubesRigidbody);
+
+            cube.Clicked -= Spawn;
         }
-
-        _explodeCreator.Explode(newCubesRigidbody);
-
-        cube.Clicked -= Spawn;
     }
 
-    private Cube CreateCube(Vector3 position, float currentCount)
+    private Cube CreateCube(Transform transform, float parentChance)
     {
-        Cube newCube = Cube.Instantiate(_cubePrefab, position, Quaternion.identity);
+        Cube newCube = Cube.Instantiate(_cubePrefab, transform.position, Quaternion.identity);
 
-        float currentScale = _scaleMultiplier * Mathf.Pow(_scaleMultiplier, currentCount);
+        newCube.transform.localScale = _scaleMultiplier * transform.localScale;
 
-        newCube.transform.localScale *= currentScale;
-
-        newCube.IncreaseCount(currentCount);
+        newCube.DecreaseChance(parentChance);
 
         newCube.Renderer.material.color = _colorChanger.GetRandomColor();
 
