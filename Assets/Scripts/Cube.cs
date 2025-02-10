@@ -1,35 +1,41 @@
+using System;
 using UnityEngine;
 
 public class Cube : MonoBehaviour
 {
     private float _chanceMultiplier = 0.5f;
     private float _initialChanceSpawn = 1f;
-    private float _currentDivisionCount = 0f;
 
-    private CubeSpawner _spawner;
-    private Transform _transform;
 
-    private float _currentChanceSpawn => _initialChanceSpawn * Mathf.Pow(_chanceMultiplier, _currentDivisionCount);
+    public event Action<Cube> CubeClicked;
+    public Renderer Renderer;
 
-    private void Start()
+    private float _currentChanceSpawn => _initialChanceSpawn * Mathf.Pow(_chanceMultiplier, CurrentDivisionCount);
+
+    public float CurrentDivisionCount { get; private set; }
+
+    public Transform CubeTransform { get; private set; }
+
+    private void Awake()
     {
-        _spawner = FindObjectOfType<CubeSpawner>();
-        _transform = gameObject.transform;
+        Renderer = GetComponent<Renderer>();
+        CubeTransform = gameObject.transform;
+        CurrentDivisionCount = 0;
     }
 
     private void OnMouseDown()
     {
-        if (Random.value <= _currentChanceSpawn)
+        if (UnityEngine.Random.value <= _currentChanceSpawn)
         {
-            _spawner?.Spawn(_transform, _currentDivisionCount);
+            CubeClicked?.Invoke(this);
         }
 
         Destroy(gameObject);
     }
 
-    public void IncreaseCount(float number)
+    public void IncreaseCount(float count)
     {
-        _currentDivisionCount = number;
-        _currentDivisionCount++;
+        CurrentDivisionCount = count;
+        CurrentDivisionCount++;
     }
 }
