@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class CubeSpawner : MonoBehaviour
 {
-    [SerializeField] private GameObject _cubePrefab;
+    [SerializeField] private Cube _cubePrefab;
     [SerializeField] private ColorChanger _colorChanger;
     [SerializeField] private ExplodeCreator _explodeCreator;
 
@@ -15,19 +16,19 @@ public class CubeSpawner : MonoBehaviour
 
     private void Awake()
     {
-        _cubes = new List<Cube>(FindObjectsOfType<Cube>());
+        _cubes = FindObjectsOfType<Cube>().ToList();
     }
 
     private void OnEnable()
     {
         foreach (Cube cube in _cubes)
-            cube.CubeClicked += Spawn;
+            cube.Clicked += Spawn;
     }
 
     private void OnDisable()
     {
         foreach (Cube cube in _cubes)
-            cube.CubeClicked -= Spawn;
+            cube.Clicked -= Spawn;
     }
 
 
@@ -39,31 +40,29 @@ public class CubeSpawner : MonoBehaviour
 
         for (int i = 0; i < randomNumber; i++)
         {
-            GameObject newCube = CreateCube(cube.transform, cube.CurrentDivisionCount);
+            Cube newCube = CreateCube(cube.transform.position, cube.CurrentDivisionCount);
 
-            newCubesRigidbody.Add(newCube.GetComponent<Rigidbody>());
+            newCubesRigidbody.Add(newCube.Rigidbody);
+
+            newCube.Clicked += Spawn;
         }
 
         _explodeCreator.Explode(newCubesRigidbody);
+
+        cube.Clicked -= Spawn;
     }
 
-    private GameObject CreateCube(Transform transform, float currentCount)
+    private Cube CreateCube(Vector3 position, float currentCount)
     {
-        GameObject newCube = GameObject.Instantiate(_cubePrefab, transform.position, Quaternion.identity);
-
-        Cube newCubeComponent = newCube?.GetComponent<Cube>();
+        Cube newCube = Cube.Instantiate(_cubePrefab, position, Quaternion.identity);
 
         float currentScale = _scaleMultiplier * Mathf.Pow(_scaleMultiplier, currentCount);
 
         newCube.transform.localScale *= currentScale;
 
-        newCubeComponent.IncreaseCount(currentCount);
+        newCube.IncreaseCount(currentCount);
 
-        newCubeComponent.Renderer.material.color = _colorChanger.GetRandomColor();
-
-        newCubeComponent.CubeClicked += Spawn;
-
-        _cubes.Add(newCubeComponent);
+        newCube.Renderer.material.color = _colorChanger.GetRandomColor();
 
         return newCube;
     }
