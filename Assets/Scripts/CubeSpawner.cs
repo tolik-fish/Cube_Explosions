@@ -27,37 +27,41 @@ public class CubeSpawner : MonoBehaviour
 
     public void Spawn(Cube cube)
     {
+        List<Rigidbody> rigidbodies = new List<Rigidbody>();
+
         if (Random.value <= cube.ChanceSpawn)
         {
             int randomNumber = Random.Range(_minNumberCubeSpawn, _maxNumberCubeSpawn + 1);
 
-            List<Rigidbody> newCubesRigidbody = new List<Rigidbody>();
-
             for (int i = 0; i < randomNumber; i++)
             {
-                Cube newCube = CreateCube(cube.transform, cube.ChanceSpawn);
+                Cube newCube = Create(cube.transform, cube.ChanceSpawn);
 
-                newCubesRigidbody.Add(newCube.Rigidbody);
+                rigidbodies.Add(newCube.Rigidbody);
 
                 newCube.Clicked += Spawn;
             }
 
-            _explodeCreator.Explode(newCubesRigidbody);
+            _explodeCreator.Explode(rigidbodies);
 
             cube.Clicked -= Spawn;
         }
+        else
+        {
+            _explodeCreator.Explode(cube);
+        }
     }
 
-    private Cube CreateCube(Transform transform, float parentChance)
+    private Cube Create(Transform transform, float parentChance)
     {
-        Cube newCube = Cube.Instantiate(_cubePrefab, transform.position, Quaternion.identity);
+        Cube cube = Cube.Instantiate(_cubePrefab, transform.position, Quaternion.identity);
 
-        newCube.transform.localScale = _scaleMultiplier * transform.localScale;
+        cube.transform.localScale = _scaleMultiplier * transform.localScale;
 
-        newCube.DecreaseChance(parentChance);
+        cube.DecreaseChance(parentChance);
 
-        newCube.Renderer.material.color = _colorChanger.GetRandomColor();
+        cube.Renderer.material.color = _colorChanger.GetRandomColor();
 
-        return newCube;
+        return cube;
     }
 }
