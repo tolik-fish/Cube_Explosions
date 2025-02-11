@@ -24,24 +24,27 @@ public class ExplodeCreator : MonoBehaviour
 
     public void Explode(Cube cube)
     {
-        List<Collider> colliders = Physics.OverlapSphere(cube.transform.position, SearchRadios/ cube.transform.localScale.y).ToList<Collider>();
+        Collider[] colliders = Physics.OverlapSphere(cube.transform.position, SearchRadios / cube.transform.localScale.y);
 
         List<Rigidbody> rigidbodies = new List<Rigidbody>();
 
         foreach (Collider collider in colliders)
-            rigidbodies.Add(collider?.GetComponent<Rigidbody>());
+            if (collider.TryGetComponent<Rigidbody>(out Rigidbody rigidbody))
+                rigidbodies.Add(rigidbody);
 
         foreach (Rigidbody rigidbody in rigidbodies)
         {
             if (rigidbody != null)
             {
-                float rangeExplode = _explodeRadius / cube.transform.localScale.y;
-                float distance = Vector3.Distance(cube.transform.position, rigidbody.position);
+                float rangeExplode = Mathf.Pow(_explodeRadius / cube.transform.localScale.y, 2);
+                float distance = (cube.transform.position - rigidbody.position).sqrMagnitude;
                 float relativeDistance = 1 - Mathf.Clamp01(distance / rangeExplode);
                 float force = _explodePower * relativeDistance / cube.transform.localScale.y;
-                Debug.Log("Дистанция: " + distance);
-                Debug.Log("Сила: " + force);
+
                 rigidbody.AddExplosionForce(force, cube.transform.position, _explodeRadius, _explodePowerUp, ForceMode.VelocityChange);
+
+                Debug.Log("Сила: " + force);
+                Debug.Log("Дистанция: " + distance);
             }
         }
     }
